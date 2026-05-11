@@ -1,0 +1,78 @@
+---
+title: "1. Overall_pattern"
+output: html_document
+date: "2026-05-11"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r message=FALSE, warning=FALSE}
+setwd("E:/2_lab/Ku3.1_LitterfallSin")
+
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+
+```
+
+```{r}
+load("./LitterfallSin/Output_dt/Littdt2.Rdata")
+
+```
+
+
+```{r}
+
+Overalldt <- Littdt2 %>%
+  group_by(Time2, plot, habitat) %>%
+  summarise(W=(sum(Weight)/0.5041)*0.01) %>%
+  ungroup() 
+
+Overalldt2 <- Overalldt%>%
+  group_by(Time2) %>%
+  summarise(mean_W= mean(W), 
+            sd_W=sd(W)) %>%
+  ungroup()
+
+Overalldt2$Time2 <- factor(Overalldt2$Time2, levels = Overalldt2$Time2, ordered = TRUE)
+Overalldt$Time2 <- factor(Overalldt$Time2, levels = Overalldt2$Time2, ordered = TRUE)
+
+wind_xmin <- which(levels(Overalldt2$Time2) == "Nov.")
+wind_xmax <- which(levels(Overalldt2$Time2) == "Feb.")
+
+growth_xmin <- which(levels(Overalldt2$Time2) == "Mar.")
+growth_xmax <- which(levels(Overalldt2$Time2) == "May")
+
+Typh_xmin <- which(levels(Overalldt2$Time2) == "July")
+Typh_xmax <- which(levels(Overalldt2$Time2) == "Aug.")
+
+OverallPlot <- ggplot(Overalldt2, mapping=aes(x=Time2, y=mean_W))+
+  geom_point(Overalldt, mapping=aes(x=Time2, y=W), color="grey80")+
+  geom_line(aes(group=1))+
+  geom_point()+
+  geom_errorbar(aes(ymin=mean_W-sd_W, ymax=mean_W+sd_W), width=.15)+
+  
+  #Put rectangle in the plot
+  annotate("rect", xmin = wind_xmin - 0.3, xmax = wind_xmax + 0.5, ymin = 0, ymax = 3, 
+           fill = "#4068af", alpha = 0.2) +
+  annotate("rect", xmin = growth_xmin  - 0.3, xmax = growth_xmax + 0.5, ymin = 0, ymax = 3, 
+           fill = "#67774a", alpha = 0.2) +
+  annotate("rect", xmin = Typh_xmin - 0.3, xmax = Typh_xmax + 0.3, ymin = 0, ymax = 3, 
+           fill = "#a9d551", alpha = 0.2)+
+  #theme
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+        legend.position = "top")+
+  
+  #xy labeling
+  xlab("Time (month)")+
+  ylab(expression("Litterfall (t ha"^-1*"month"^-1*")"))
+
+OverallPlot
+
+```

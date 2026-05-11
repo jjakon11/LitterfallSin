@@ -1,0 +1,188 @@
+---
+title: "Windspeed and Litterfall"
+author: "Chen-Chia Ku"
+date: "2026-05-11"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+setwd("E:/2_lab/Ku3.1_LitterfallSin")
+```
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(vegan)
+
+```
+
+```{r}
+load("./Data/Rdata/wind_dt.rdata")
+load("./Data/Rdata/Overalldt.rdata")
+load("./Data/Rdata/Climatedt_2012.rdata")
+```
+
+# Litterfall data compile
+```{r}
+Litter_Mx <- Overalldt %>%
+  group_by(Time2) %>%
+  summarise(Litter_sum=sum(W, na.rm=T)) %>%
+  ungroup() %>%
+  bind_cols(., Climatedt_2012) %>%
+  left_join(wind_dt,by=c("Date"="YM")) %>%
+  dplyr::select(Date, Litter_sum, T_mean, P_sum, 
+                WS_m, WD_m)
+  
+
+```
+
+
+```{r}
+
+Litter_Mx <- Litter_Mx %>%
+    mutate(
+        month = lubridate::month(Date),
+        season = case_when(month %in% c(11,12,1,2)  ~ "Monsoon wind season",
+                           month %in% c(7,8) ~ "Typhoon disturbance",
+                           TRUE ~ "Spring phenology")
+    )
+    
+Litter_Mx <- Litter_Mx %>%
+    mutate(wind_exposure = cos((WD_m - 45) * pi/180) * WS_m)
+
+mod2 <- lm(Litter_sum ~ WS_m*season, data = Litter_Mx)
+summary(mod2)
+```
+
+
+```{r}
+library(ggplot2)
+
+mod <- lm(Litter_sum ~ WS_m * season, data = Litter_Mx)
+
+newdat <- expand.grid(
+  WS_m = seq(min(Litter_Mx$WS_m),
+             max(Litter_Mx$WS_m),
+             length.out = 100),
+  season = levels(factor(Litter_Mx$season))
+)
+
+pred <- predict(mod, newdat, interval = "confidence")
+newdat <- cbind(newdat, pred)
+
+WindLitter <- ggplot() +
+  geom_point(data = Litter_Mx,
+             aes(WS_m, Litter_sum, color = season),
+             size = 2) +
+  geom_ribbon(data = newdat,
+              aes(WS_m, ymin = lwr, ymax = upr, fill = season),
+              alpha = 0.2, color = NA) +
+  geom_line(data = newdat,
+            aes(WS_m, fit, color = season, linetype = season),
+            linewidth = 1.0) +
+  scale_fill_manual(values=c("#4068af", "#67774a", "#a9d551"))+
+  scale_color_manual(values=c("#4068af", "#67774a", "#a9d551"))+
+  scale_linetype_manual(values = c("Monsoon wind season" = "dashed",
+                                   "Spring phenology"    = "dashed",
+                                   "Typhoon disturbance" = "solid"))+
+  guides(linetype = "none", 
+         fill="none")+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+        legend.position = c(0.95, 0.05), 
+        legend.justification = c("right", "bottom"),
+        legend.background = element_rect(fill = alpha("white", 0.0), color = "black", linewidth = 0.3))+
+  labs(x = expression("Wind speed (m s"^-1*")"),
+       y = expression("Litterfall (t ha"^-1*"month"^-1*")"),
+       color = "Seasonal phases")
+```
+
+
+```{r}
+
+ggexport(WindLitter, filename = "./LitterfallSin/Output/WindLitter.png", width=4500, height=4500, res=900 )
+ggexport(WindLitter, filename = "./LitterfallSin/Output/WindLitter.pdf", width=4500/900, height=4500/900)
+
+```
+
+
+```{r}
+library(tidyr)
+
+longdat <- Litter_Mx %>%
+  pivot_longer(cols = c(T_mean, P_sum,WS_m),
+               names_to = "Predictor",
+               values_to = "Value") %>%
+  mutate(Predictor=case_when(Predictor=="WS_m" ~ "Wind speed", 
+                             Predictor=="P_sum" ~ "Precipitation",
+                             Predictor=="T_mean" ~ "Temperature"))
+prec <- longdat %>%
+  filter(Predictor == "Precipitation") %>%
+  ggplot(aes(Value, Litter_sum)) +
+  geom_point(aes(color = season), size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+  scale_color_manual(values=c("#4068af", "#67774a", "#a9d551"))+
+  labs(x = "Precipitation (mm)", 
+       y = expression("Litterfall (t ha"^-1*"month"^-1*")"), 
+       color="Seasonal phases")+
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm"), 
+        panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+        legend.position = "top")
+
+temp <- longdat %>%
+  filter(Predictor == "Temperature") %>%
+  ggplot(aes(Value, Litter_sum)) +
+  geom_point(aes(color = season), size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "solid") +
+  scale_color_manual(values=c("#4068af", "#67774a", "#a9d551"))+
+  labs(x = expression("Temperature ("*degree*"C)"), 
+       y = NULL, 
+       color="Seasonal phases")+
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm") ,
+        panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+        legend.position = "top")
+
+wind <- longdat %>%
+  filter(Predictor == "Wind speed") %>%
+  ggplot(aes(Value, Litter_sum)) +
+  geom_point(aes(color = season), size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+  scale_color_manual(values=c("#4068af", "#67774a", "#a9d551"))+
+  labs(x = expression("Wind speed (m s"^-1*")"),  
+       y = NULL, 
+       color="Seasonal phases") +
+  theme(plot.margin=margin_auto(0.1, unit = "cm"),
+        panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+        legend.position = "top")
+
+
+
+```
+
+```{r}
+Climateplot <- ggarrange(prec, temp, wind, 
+          labels = c("(a)", "(b)", "(c)"),
+        
+          ncol=3, nrow=1, 
+          common.legend=TRUE, 
+          legend="top", align = "hv")
+
+```
+
+
+```{r}
+
+ggexport(Climateplot, filename = "./LitterfallSin/Output/Climateplot.png", width=5000, height=2000, res=600 )
+ggexport(Climateplot, filename = "./LitterfallSin/Output/Climateplot.pdf", width=5000/600, height=2000/600 )
+
+```

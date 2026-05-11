@@ -1,0 +1,143 @@
+---
+title: "4.Species"
+output: html_document
+date: "2026-05-11"
+editor_options: 
+  chunk_output_type: console
+---
+# setup
+```{r message=FALSE, warning=FALSE}
+setwd("E:/2_lab/Ku3.1_LitterfallSin")
+```
+
+# Library
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+# Data
+```{r}
+load("./LitterfallSin/Output_dt/SPdtx.Rdata")
+load("./LitterfallSin/Output_dt/speciesList.Rdata")
+
+```
+
+# Data_cleanning
+```{r}
+Alkane <- SPdtx %>%
+  group_by(habitat, Species2) %>%
+  summarise(Litterfall=(mean(Weight)/50.41),
+            Littersd=(sd(Weight)/50.41),
+            nalkane=mean(Akcon2)) %>%
+  ungroup() %>%
+  mutate(Production=Litterfall*((nalkane)*1000000)/10000000000 ) %>%
+  group_by(habitat) %>%
+  arrange(desc(habitat), desc(Production)) %>%
+  ungroup() %>%
+  left_join(speciesList %>% dplyr::select(Name, speciesName), 
+            by=c("Species2"="Name")) %>%
+  mutate(habitat=ifelse(habitat==0, "Windward", 
+                        ifelse(habitat==1, "Leeward", "Creek"))) %>%
+  mutate(habitat=factor(habitat, levels= c("Windward", "Leeward", "Creek")))
+
+Alkane_Clean <-Alkane  %>%
+  filter(!str_detect(Species2, "未知"), 
+         ! Species2 %in% c("Leafother"))
+
+```
+
+## Relationship between n alkane production and litterfall
+
+```{r}
+Relationship <- ggplot()+
+  geom_point(Alkane_Clean, mapping=aes(x=Litterfall, y=Production, color=as.factor(habitat), shape=as.factor(habitat)))+
+  scale_color_manual(name = "Habitat",
+                     values = c("#FF0000", "black", "#4E748A")) +
+  scale_shape_manual(name = "Habitat",
+                     values=c(15, 18,17))+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+    
+        legend.position = c(0.98, 0.98), 
+        legend.justification = c("right", "top"),
+        legend.background = element_rect(fill = alpha("white", 0.0), color = "black", linewidth = 0.3))+
+  ylab(expression("Carbon flux (ug ha"^-1*" month "^-1*"x 10"^10*")"))+
+  xlab(expression("Litterfall (t ha"^-1*" month "^-1*")"))
+
+Relationship 
+```
+
+
+## n-alkane production in different species and time
+```{r}
+
+SP_Alkane <-  SPdtx %>%
+  mutate(Litterfall=Weight/50.41) %>%
+  mutate(Production=round(Litterfall*((Akcon)*1000000) ,2)/10000000000) %>%
+  filter(!str_detect(Species2, "未知"), 
+         ! Species2 %in% c("Leafother")) %>%
+    mutate(habitat=ifelse(habitat==0, "Windward", 
+                        ifelse(habitat==1, "Leeward", "Creek"))) %>%
+  mutate(habitat=factor(habitat, levels= c("Windward", "Leeward", "Creek")))
+
+SP_Alkane_B <- SP_Alkane %>%
+  group_by(Time, habitat) %>%
+  summarise(boot_mean = replicate(1000, mean(sample(Production, replace = TRUE)))) %>%
+  unnest(boot_mean) %>%
+  ungroup() %>%
+  mutate(sampleN=rep(1:1000, time=33))
+
+SP_Alkane_Real <- SP_Alkane %>%
+  group_by(Time, habitat) %>%
+  summarise(MeanProduction=mean(Production)) %>%
+  ungroup()
+
+
+LP_time <- ggplot()+
+  geom_line(SP_Alkane_B, mapping=aes(x=Time, y=boot_mean, group=sampleN), 
+            color="grey80", linewidth=0.05)+
+  
+  geom_line(SP_Alkane_Real, mapping=aes(x=Time, y=MeanProduction, group=1), color="black")+
+  
+  geom_point(SP_Alkane_Real, mapping=aes(x=Time, y=MeanProduction), color="black")+
+  scale_x_date(breaks = "1 month", minor_breaks = "1 month", labels = function(x) format(x, "%b"))+
+  facet_wrap(~habitat)+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"), 
+        strip.text.x = element_text(size = 12, colour = "black"))+
+  ylab(expression("Carbon flux (ug ha"^-1*"x 10"^10*")"))+
+  xlab("Time(month)")
+
+LP_time
+```
+
+
+
+## supplementary
+```{r}
+set.seed(100)
+Alkane2 <- Alkane %>%
+  group_by(habitat) %>%
+  summarise(MeanProduct=mean(Production), 
+            SdProduct=sd(Production), 
+            boot_sd = replicate(1000, mean(sample(Production, replace = TRUE))) %>% sd()) %>%
+  ungroup()
+
+nProduction <- ggplot()+
+  geom_point(Alkane, mapping=aes(x=as.factor(habitat), y=Production), size=0.9, color="grey85")+
+  geom_point(Alkane2, mapping=aes(x=as.factor(habitat), y=MeanProduct), color="#4e0000")+
+  geom_errorbar(Alkane2, mapping=aes(x=as.factor(habitat), y=MeanProduct, 
+                                     ymax=MeanProduct+boot_sd, ymin=MeanProduct-boot_sd),
+                color="#4e0000", width=0.08)+
+  scale_y_log10(breaks = c(1e-5, 1e-4, 1e-3, 1e-2, 1e-1),
+              labels = c("0.00001", "0.0001", "0.001", "0.01", "0.1"))+
+  theme(panel.border = element_rect(colour = "black", fill=NA, linewidth = 1.5),
+        panel.background = element_rect(fill = "white"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+        legend.position = "top")+
+  ylab(expression("Carbon flux (ug ha"^-1*" month "^-1*"x 10"^10*")"))+
+  xlab("Habitat")
+
+```

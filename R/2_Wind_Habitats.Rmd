@@ -1,0 +1,118 @@
+---
+title: "2. Wind_habitat"
+output: html_document
+date: "2026-05-11"
+editor_options: 
+  chunk_output_type: console
+---
+```{r message=FALSE, warning=FALSE}
+setwd("E:/2_lab/Ku3.1_LitterfallSin")
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggpubr)
+library(coin)
+library(rcompanion)
+```
+
+```{r}
+load("./LitterfallSin/Output_dt/Littdt2.Rdata")
+```
+
+
+# Wind season and habiat
+```{r}
+Winds <-Littdt2 %>%
+  group_by(Time2, plot, habitat,  portion, wind_season) %>%
+  summarise(W=(sum(Weight)/0.5041)*0.01) %>%
+  ungroup() %>%
+  group_by(Time2, habitat, portion, wind_season) %>%
+  summarise(mean_W= mean(W), 
+            sd_W=sd(W)) %>%
+  ungroup() %>%
+  filter(wind_season!="NA")%>%
+  mutate(habitat=ifelse(habitat==0, "Windward", 
+                        ifelse(habitat==1, "Leeward", "Creek"))) %>%
+  mutate(habitat=factor(habitat, levels= c("Windward", "Leeward", "Creek"))) %>%
+  mutate(portion = fct_recode(portion,
+                              "Leaf"="leaf", 
+                              "Branch"="branch",
+                              "Flower"="flower",
+                              "Fruit"="fruit", 
+                              "Miscellaneous"="other"))
+Winds1 <- Winds %>%
+  group_by(habitat, wind_season, portion) %>%
+  summarise(mean_W=sum(mean_W)) %>%
+  ungroup
+
+Winds2 <- Winds%>%
+  group_by( wind_season, portion) %>%
+  summarise(mean=mean(mean_W), 
+            sd=sd(mean_W),
+            boot_sd = replicate(1000, mean(sample(mean_W, replace = TRUE))) %>% sd()) %>%
+  ungroup()
+
+
+Wind_plot <- ggplot(Winds2, mapping=aes(x=wind_season, y=mean))+
+  geom_point(Winds, mapping=aes(x=wind_season, y=mean_W, color=as.factor(habitat), shape=as.factor(habitat)), 
+             #colour=NULL, 
+             alpha=0.6, 
+             size=2.5)+
+  geom_point(size=1.5)+
+  geom_errorbar(aes(ymin=mean-boot_sd, ymax=mean+boot_sd), width=0.16, linewidth=0.4)+
+  scale_y_continuous(limits = c(0, 1))+
+  scale_color_manual(name = "Habitat",
+                     values = c("#FF0000", "grey70", "#104869"))+
+  scale_shape_manual(name = "Habitat",
+                     values=c(15, 18,17))+
+  facet_wrap(~portion, ncol=5)+
+  theme(panel.border = element_rect(colour = "black", fill=NA),
+        panel.background = element_rect(fill = "white"),
+        strip.background = element_rect(fill="grey80", size=0.5, color="black"),
+        strip.text.x = element_text(size = 12, colour = "black"),
+        axis.text.y = element_text(angle = 90, hjust=0.5),
+        axis.text.x = element_text(angle = 25, hjust=0.9),
+        legend.position = c(0.99, 0.98), 
+        legend.justification = c("right", "top"),
+        legend.background = element_rect(fill = alpha("white", 0.0), color = "black", linewidth = 0.3))+
+  xlab("Phenological phase")+
+  ylab(expression("Litterfall (t ha"^-1*"month"^-1*")"))
+```
+
+
+```{r}
+Wind_plot
+
+
+```
+
+# Anova Testing with Permutation
+
+## Spatial 
+```{r}
+
+oneway_test(W ~ as.factor(habitat), data = Table_habitat0,
+            distribution = approximate(nresample = 1000)) 
+
+pairwisePermutationTest(W ~ as.factor(habitat), data = Table_habitat0,
+                        method = "fdr", # or "bonferroni", "holm"
+                        permutations = 1000)
+
+```
+
+
+## Temporal 
+```{r}
+
+oneway_test(mean_W ~ as.factor(wind_season), data = Winds ,
+            distribution = approximate(nresample = 1000)) 
+
+
+pairwisePermutationTest(mean_W ~ as.factor(wind_season), data = Winds ,
+                        method = "fdr", # or "bonferroni", "holm"
+                        permutations = 1000)
+
+```
