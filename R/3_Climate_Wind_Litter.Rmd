@@ -20,12 +20,26 @@ library(vegan)
 ```
 
 ```{r}
+load("./LitterfallSin/Output_dt/Littdt2.Rdata")
 load("./Data/Rdata/wind_dt.rdata")
-load("./Data/Rdata/Overalldt.rdata")
+
 load("./Data/Rdata/Climatedt_2012.rdata")
 ```
 
+
+
+
 # Litterfall data compile
+
+```{r}
+Overalldt <- Littdt2 %>%
+  group_by(Time2, plot, habitat) %>%
+  summarise(W=(sum(Weight)/0.5041)*0.01) %>%
+  ungroup() 
+
+```
+
+
 ```{r}
 Litter_Mx <- Overalldt %>%
   group_by(Time2) %>%
