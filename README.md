@@ -1,11 +1,10 @@
 # Litterfall in 2012
 
-This is the manuscript of the litter-fall which is collected in 2012 by Sin Chen. We analyze the weight pattern overtime in three different habitats and also classified into different portion and species. Moreover, we detect the *n*-alkanes in the leaf, branch, flower, fruit and miscellaneous fractions.
+This research have been published in Ecosystems 
 
-This work have been finished all the data collection and extraction. The process is now on organizing the manuscript.
+This is the manuscript of the litter-fall which is collected in 2012 by Sin Chen. So this repository called LitterfallSin.
 
-## Things need to do :
+## Wind Stress and Wind Disturbance Control Litterfall and Carbon Flux.
+Forest litterfall plays a crucial role in transferring carbon from aboveground biomass to soils and is strongly influenced by species phenology and environmental conditions. While the effect of climate and nutrients have been widely studied, the role of wind has been understudied. Seasonal monsoon winds can act as a chronic stress to trees due to their long-term directional effect. However, typhoons act as acute disturbances due to their sudden, multidirectional high-intensity winds. We investigated the combined effects of seasonal winds and species phenology on litterfall dynamics across three seasonal phases: the spring phenology (March–May), episodes of typhoon disturbance (July–August), and the northeast monsoon wind season (November–February). We installed twenty-two litterfall traps across windward, leeward, and creek (i.e., topographically protected) habitats within the Nanjenshan Forest Dynamics Plot in Taiwan. We collected litterfall monthly from October 2012 to August 2013 and categorized it into leaves, branches, flowers, fruits, and miscellaneous fractions. Leaf litter was further separated by species and straight-chain n-alkane concentrations. We extracted straight-chain n-alkanes, long-chain, chemically stable plant wax compounds resistant to decomposition, to examine how undecomposed carbon is transferred from aboveground biomass to belowground carbon pools.
+Annual litterfall was 6.98±0.97 t ha-1 yr-1, with leaves litterfall accounting for 62.5% of the total. Litterfall exhibited strong seasonal patterns: the typhoon season had the highest total litterfall, particularly in branches, while the spring phenology had a peak in leaf litter. In contrast, litterfall production was lowest during the monsoon wind season. Wind-structured habitat conditions influenced carbon flux. Carbon flux in the creek habitat was approximately five to seven times greater than in windward and leeward habitats, indicating substantially higher carbon transfer in area with low-wind exposure. These results indicate contrasting effects of chronic and acute wind regimes on carbon transfer, with typhoons generating large pulses of litterfall and monsoon exposure associated with reduced background production, revealing a dual role of wind in forest carbon dynamics. This study highlights the importance of considering both chronic and acute wind regimes when evaluating spatial patterns of litterfall and the transfer of carbon from aboveground biomass to soils in the forest ecosystems.
 
-1.  Organize the result
-2.  Reorganize the introduction
-3.  Rewrite the Discussion
