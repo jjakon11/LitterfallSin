@@ -1,8 +1,18 @@
 # Litterfall in 2012
 
-This research have been published in Ecosystems 
+This is a data and code repository for the publication of litterfall from Ecosystems 
 
-This is the manuscript of the litter-fall which is collected in 2012 by Sin Chen. So this repository called LitterfallSin.
+The data include:
+
+1. Litterfall data:[Littdt2.Rdata](Output_dt/Littdt2.Rdata)
+
+2. Alkane Concentration:
+
+3. climate data:
+
+4. Species List:
+
+This is the manuscript of the litterfall which is collected in 2012 by Sin Chen. So this repository called LitterfallSin.
 
 ## Wind Stress and Wind Disturbance Control Litterfall and Carbon Flux.
 Forest litterfall plays a crucial role in transferring carbon from aboveground biomass to soils and is strongly influenced by species phenology and environmental conditions. While the effect of climate and nutrients have been widely studied, the role of wind has been understudied. Seasonal monsoon winds can act as a chronic stress to trees due to their long-term directional effect. However, typhoons act as acute disturbances due to their sudden, multidirectional high-intensity winds. We investigated the combined effects of seasonal winds and species phenology on litterfall dynamics across three seasonal phases: the spring phenology (March–May), episodes of typhoon disturbance (July–August), and the northeast monsoon wind season (November–February). We installed twenty-two litterfall traps across windward, leeward, and creek (i.e., topographically protected) habitats within the Nanjenshan Forest Dynamics Plot in Taiwan. We collected litterfall monthly from October 2012 to August 2013 and categorized it into leaves, branches, flowers, fruits, and miscellaneous fractions. Leaf litter was further separated by species and straight-chain n-alkane concentrations. We extracted straight-chain n-alkanes, long-chain, chemically stable plant wax compounds resistant to decomposition, to examine how undecomposed carbon is transferred from aboveground biomass to belowground carbon pools.
